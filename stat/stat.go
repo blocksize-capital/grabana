@@ -2,6 +2,8 @@ package stat
 
 import (
 	"fmt"
+	"github.com/K-Phoen/grabana/dataLink"
+	"github.com/K-Phoen/grabana/valueMapping"
 
 	"github.com/K-Phoen/grabana/errors"
 	"github.com/K-Phoen/grabana/scheme"
@@ -392,6 +394,14 @@ func Repeat(repeat string) Option {
 	}
 }
 
+// MaxPerRow configures the panel to be repeated a maximum of count times per row.
+func MaxPerRow(count uint) Option {
+	return func(stat *Stat) error {
+		stat.Builder.MaxPerRow = &count
+		return nil
+	}
+}
+
 // Text indicates if name and value is displayed or just name.
 func Text(mode TextMode) Option {
 	return func(stat *Stat) error {
@@ -424,6 +434,159 @@ func NoValue(text string) Option {
 	return func(stat *Stat) error {
 		stat.Builder.StatPanel.FieldConfig.Defaults.NoValue = text
 
+		return nil
+	}
+}
+
+// AddValueMappingMatchValue adds a new value mapping to the panel that matches a specific text value.
+func AddValueMappingMatchValue(match string, options ...valueMapping.ResultOption) Option {
+	return func(stat *Stat) error {
+		i := 0
+		valueMapExists := false
+		// first pass, count the number of existing ValueMappings
+		for _, v := range stat.Builder.StatPanel.FieldConfig.Defaults.Mappings {
+			switch mapping := v.Options.(type) {
+			case *sdk.ValueMapOptions:
+				i += len(*mapping)
+				valueMapExists = true
+			default:
+				i++
+			}
+		}
+
+		result := sdk.ValueMappingResult{
+			Index: &i,
+		}
+		for _, option := range options {
+			option(&result)
+		}
+
+		if valueMapExists {
+			for _, v := range stat.Builder.StatPanel.FieldConfig.Defaults.Mappings {
+				switch mapping := v.Options.(type) {
+				case *sdk.ValueMapOptions:
+					(*mapping)[match] = result
+				default:
+					continue
+				}
+			}
+		} else {
+			stat.Builder.StatPanel.FieldConfig.Defaults.Mappings = append(stat.Builder.StatPanel.FieldConfig.Defaults.Mappings, sdk.FieldConfigValueMapping{
+				Type: sdk.FieldConfigValueMappingTypeValue,
+				Options: &sdk.ValueMapOptions{
+					match: result,
+				},
+			})
+
+		}
+		return nil
+	}
+}
+
+// AddValueMappingMatchRange adds a new value mapping to the panel that matches a numerical range.
+func AddValueMappingMatchRange(from, to float64, options ...valueMapping.ResultOption) Option {
+	return func(stat *Stat) error {
+		i := 0
+		// first pass, count the number of existing ValueMappings
+		for _, v := range stat.Builder.StatPanel.FieldConfig.Defaults.Mappings {
+			switch mapping := v.Options.(type) {
+			case *sdk.ValueMapOptions:
+				i += len(*mapping)
+			default:
+				i++
+			}
+		}
+
+		rangeMapOptions := sdk.RangeMapOptions{
+			From: &from,
+			To:   &to,
+			Result: sdk.ValueMappingResult{
+				Index: &i,
+			},
+		}
+		for _, option := range options {
+			option(&rangeMapOptions.Result)
+		}
+
+		stat.Builder.StatPanel.FieldConfig.Defaults.Mappings = append(stat.Builder.StatPanel.FieldConfig.Defaults.Mappings, sdk.FieldConfigValueMapping{
+			Type:    sdk.FieldConfigValueMappingTypeRange,
+			Options: &rangeMapOptions,
+		})
+		return nil
+	}
+}
+
+// AddValueMappingMatchSpecial adds a new value mapping to the panel that matches on null, NaN, boolean and empty values.
+func AddValueMappingMatchSpecial(matchOption valueMapping.SpecialMatchOption, options ...valueMapping.ResultOption) Option {
+	return func(stat *Stat) error {
+		i := 0
+		// first pass, count the number of existing ValueMappings
+		for _, v := range stat.Builder.StatPanel.FieldConfig.Defaults.Mappings {
+			switch mapping := v.Options.(type) {
+			case *sdk.ValueMapOptions:
+				i += len(*mapping)
+			default:
+				i++
+			}
+		}
+
+		result := sdk.ValueMappingResult{Index: &i}
+		for _, option := range options {
+			option(&result)
+		}
+
+		specialMapOptions := sdk.SpecialValueMapOptions{
+			Result: result,
+		}
+		matchOption(&specialMapOptions)
+
+		stat.Builder.StatPanel.FieldConfig.Defaults.Mappings = append(stat.Builder.StatPanel.FieldConfig.Defaults.Mappings, sdk.FieldConfigValueMapping{
+			Type:    sdk.FieldConfigValueMappingTypeSpecial,
+			Options: &specialMapOptions,
+		})
+		return nil
+	}
+}
+
+// AddValueMappingMatchRegex adds a new value mapping to the panel that matches a regular expression with replacement.
+func AddValueMappingMatchRegex(regex string, options ...valueMapping.ResultOption) Option {
+	return func(stat *Stat) error {
+		i := 0
+		// first pass, count the number of existing ValueMappings
+		for _, v := range stat.Builder.StatPanel.FieldConfig.Defaults.Mappings {
+			switch mapping := v.Options.(type) {
+			case *sdk.ValueMapOptions:
+				i += len(*mapping)
+			default:
+				i++
+			}
+		}
+
+		regexValueOption := sdk.RegexMapOptions{
+			Pattern: regex,
+			Result: sdk.ValueMappingResult{
+				Index: &i,
+			},
+		}
+		for _, option := range options {
+			option(&regexValueOption.Result)
+		}
+
+		stat.Builder.StatPanel.FieldConfig.Defaults.Mappings = append(stat.Builder.StatPanel.FieldConfig.Defaults.Mappings, sdk.FieldConfigValueMapping{
+			Type:    sdk.FieldConfigValueMappingTypeRegex,
+			Options: &regexValueOption,
+		})
+		return nil
+	}
+}
+
+func AddDataLink(link dataLink.DataLink) Option {
+	return func(stat *Stat) error {
+		stat.Builder.StatPanel.FieldConfig.Defaults.Links = append(stat.Builder.StatPanel.FieldConfig.Defaults.Links, sdk.DataLink{
+			TargetBlank: link.TargetBlank,
+			Title:       link.Title,
+			Url:         link.Url,
+		})
 		return nil
 	}
 }
