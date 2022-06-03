@@ -25,14 +25,27 @@ func (values ValuesMap) asQuery() string {
 	return strings.Join(valuesList, ",")
 }
 
-func (values ValuesMap) labelFor(value string) *sdk.StringSliceString {
+func (values ValuesMap) getRev(value string) (label string, ok bool) {
 	for label, val := range values {
 		if val == value {
-			return &sdk.StringSliceString{Value: []string{label}, Valid: true}
+			return label, true
+		}
+	}
+	return "", false
+}
+
+func (values ValuesMap) labelsFor(vals ...string) *sdk.StringSliceString {
+	out := make([]string, len(vals))
+	for i, v := range vals {
+		label, ok := values.getRev(v)
+		if ok {
+			out[i] = label
+		} else {
+			out[i] = v
 		}
 	}
 
-	return &sdk.StringSliceString{Value: []string{value}, Valid: true}
+	return &sdk.StringSliceString{Value: out, Valid: true}
 }
 
 // Custom represents a "custom" templated variable.
@@ -67,17 +80,21 @@ func Values(values ValuesMap) Option {
 			})
 		}
 
+		sort.Slice(custom.Builder.Options, func(i, j int) bool {
+			return custom.Builder.Options[i].Text < custom.Builder.Options[j].Text
+		})
+
 		custom.values = values
 		custom.Builder.Query = values.asQuery()
 	}
 }
 
 // Default sets the default value of the variable.
-func Default(value string) Option {
+func Default(values ...string) Option {
 	return func(custom *Custom) {
 		custom.Builder.Current = sdk.Current{
-			Text:  custom.values.labelFor(value),
-			Value: value,
+			Text:  custom.values.labelsFor(values...),
+			Value: values,
 		}
 	}
 }
