@@ -2,6 +2,7 @@ package timeseries
 
 import (
 	"fmt"
+	"github.com/K-Phoen/grabana/dataLink"
 
 	"github.com/K-Phoen/grabana/alert"
 	"github.com/K-Phoen/grabana/errors"
@@ -413,6 +414,18 @@ func FieldOverride(m fields.Matcher, opts ...fields.OverrideOption) Option {
 
 		timeseries.Builder.TimeseriesPanel.FieldConfig.Overrides = append(timeseries.Builder.TimeseriesPanel.FieldConfig.Overrides, override)
 
+		return nil
+	}
+}
+
+// AddDataLink adds the given DataLink to the Timeseries panel.
+func AddDataLink(link dataLink.DataLink) Option {
+	return func(stat *TimeSeries) error {
+		stat.Builder.TimeseriesPanel.FieldConfig.Defaults.Links = append(stat.Builder.TimeseriesPanel.FieldConfig.Defaults.Links, sdk.DataLink{
+			TargetBlank: link.TargetBlank,
+			Title:       link.Title,
+			Url:         link.Url,
+		})
 		return nil
 	}
 }

@@ -594,6 +594,7 @@ func AddValueMappingMatchRegex(regex string, options ...valueMapping.ResultOptio
 	}
 }
 
+// AddDataLink adds the given DataLink to the Stat panel.
 func AddDataLink(link dataLink.DataLink) Option {
 	return func(stat *Stat) error {
 		stat.Builder.StatPanel.FieldConfig.Defaults.Links = append(stat.Builder.StatPanel.FieldConfig.Defaults.Links, sdk.DataLink{

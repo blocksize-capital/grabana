@@ -2,6 +2,7 @@ package graph
 
 import (
 	"fmt"
+	"github.com/K-Phoen/grabana/dataLink"
 
 	"github.com/K-Phoen/grabana/alert"
 	"github.com/K-Phoen/grabana/axis"
@@ -420,6 +421,18 @@ func Legend(opts ...LegendOption) Option {
 
 		graph.Builder.GraphPanel.Legend = legend
 
+		return nil
+	}
+}
+
+// AddDataLink adds the given DataLink to the Graph panel.
+func AddDataLink(link dataLink.DataLink) Option {
+	return func(stat *Graph) error {
+		stat.Builder.GraphPanel.FieldConfig.Defaults.Links = append(stat.Builder.GraphPanel.FieldConfig.Defaults.Links, sdk.DataLink{
+			TargetBlank: link.TargetBlank,
+			Title:       link.Title,
+			Url:         link.Url,
+		})
 		return nil
 	}
 }
