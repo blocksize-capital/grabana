@@ -2,7 +2,7 @@ module github.com/K-Phoen/grabana
 
 go 1.18
 
-replace github.com/K-Phoen/sdk v0.11.0 => github.com/blocksize-capital/grafana-sdk v0.11.1
+replace github.com/K-Phoen/sdk => github.com/blocksize-capital/grafana-sdk v0.11.2-0.20220804081838-b6e591b82578
 
 require (
 	github.com/K-Phoen/sdk v0.11.1
