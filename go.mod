@@ -5,7 +5,7 @@ go 1.18
 replace github.com/K-Phoen/sdk v0.11.0 => github.com/blocksize-capital/grafana-sdk v0.11.1
 
 require (
-	github.com/K-Phoen/sdk v0.11.0
+	github.com/K-Phoen/sdk v0.11.1
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/prometheus/common v0.34.0
 	github.com/rhysd/go-github-selfupdate v1.2.3
