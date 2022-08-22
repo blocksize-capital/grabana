@@ -1,4 +1,4 @@
-package stat
+package gauge
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewStatPanelsCanBeCreated(t *testing.T) {
+func TestNewGaugePanelsCanBeCreated(t *testing.T) {
 	req := require.New(t)
 
 	panel, err := New("Stat panel")
@@ -20,7 +20,7 @@ func TestNewStatPanelsCanBeCreated(t *testing.T) {
 	req.Equal(float32(6), panel.Builder.Span)
 }
 
-func TestStatPanelCanHaveLinks(t *testing.T) {
+func TestGaugePanelCanHaveLinks(t *testing.T) {
 	req := require.New(t)
 
 	panel, err := New("", Links(links.New("", "")))
@@ -29,7 +29,7 @@ func TestStatPanelCanHaveLinks(t *testing.T) {
 	req.Len(panel.Builder.Links, 1)
 }
 
-func TestStatPanelCanHavePrometheusTargets(t *testing.T) {
+func TestGaugePanelCanHavePrometheusTargets(t *testing.T) {
 	req := require.New(t)
 
 	panel, err := New("", WithPrometheusTarget(
@@ -37,37 +37,37 @@ func TestStatPanelCanHavePrometheusTargets(t *testing.T) {
 	))
 
 	req.NoError(err)
-	req.Len(panel.Builder.StatPanel.Targets, 1)
+	req.Len(panel.Builder.GaugePanel.Targets, 1)
 }
 
-func TestStatPanelCanHaveGraphiteTargets(t *testing.T) {
+func TestGaugePanelCanHaveGraphiteTargets(t *testing.T) {
 	req := require.New(t)
 
 	panel, err := New("", WithGraphiteTarget("stats_counts.statsd.packets_received"))
 
 	req.NoError(err)
-	req.Len(panel.Builder.StatPanel.Targets, 1)
+	req.Len(panel.Builder.GaugePanel.Targets, 1)
 }
 
-func TestStatPanelCanHaveInfluxDBTargets(t *testing.T) {
+func TestGaugePanelCanHaveInfluxDBTargets(t *testing.T) {
 	req := require.New(t)
 
 	panel, err := New("", WithInfluxDBTarget("buckets()"))
 
 	req.NoError(err)
-	req.Len(panel.Builder.StatPanel.Targets, 1)
+	req.Len(panel.Builder.GaugePanel.Targets, 1)
 }
 
-func TestStatPanelCanHaveStackdriverTargets(t *testing.T) {
+func TestGaugePanelCanHaveStackdriverTargets(t *testing.T) {
 	req := require.New(t)
 
 	panel, err := New("", WithStackdriverTarget(stackdriver.Gauge("pubsub.googleapis.com/subscription/ack_message_count")))
 
 	req.NoError(err)
-	req.Len(panel.Builder.StatPanel.Targets, 1)
+	req.Len(panel.Builder.GaugePanel.Targets, 1)
 }
 
-func TestStatPanelWidthCanBeConfigured(t *testing.T) {
+func TestGaugePanelWidthCanBeConfigured(t *testing.T) {
 	req := require.New(t)
 
 	panel, err := New("", Span(6))
@@ -85,7 +85,7 @@ func TestStatRejectsInvalidSpans(t *testing.T) {
 	req.ErrorIs(err, errors.ErrInvalidArgument)
 }
 
-func TestStatPanelHeightCanBeConfigured(t *testing.T) {
+func TestGaugePanelHeightCanBeConfigured(t *testing.T) {
 	req := require.New(t)
 
 	panel, err := New("", Height("400px"))
@@ -94,7 +94,7 @@ func TestStatPanelHeightCanBeConfigured(t *testing.T) {
 	req.Equal("400px", *(panel.Builder.Height).(*string))
 }
 
-func TestStatPanelBackgroundCanBeTransparent(t *testing.T) {
+func TestGaugePanelBackgroundCanBeTransparent(t *testing.T) {
 	req := require.New(t)
 
 	panel, err := New("", Transparent())
@@ -103,7 +103,7 @@ func TestStatPanelBackgroundCanBeTransparent(t *testing.T) {
 	req.True(panel.Builder.Transparent)
 }
 
-func TestStatPanelDescriptionCanBeSet(t *testing.T) {
+func TestGaugePanelDescriptionCanBeSet(t *testing.T) {
 	req := require.New(t)
 
 	panel, err := New("", Description("lala"))
@@ -113,7 +113,7 @@ func TestStatPanelDescriptionCanBeSet(t *testing.T) {
 	req.Equal("lala", *panel.Builder.Description)
 }
 
-func TestStatPanelDataSourceCanBeConfigured(t *testing.T) {
+func TestGaugePanelDataSourceCanBeConfigured(t *testing.T) {
 	req := require.New(t)
 
 	panel, err := New("", DataSource("prometheus-default"))
@@ -138,7 +138,7 @@ func TestUnitCanBeConfigured(t *testing.T) {
 	panel, err := New("", Unit("bytes"))
 
 	req.NoError(err)
-	req.Equal("bytes", panel.Builder.StatPanel.FieldConfig.Defaults.Unit)
+	req.Equal("bytes", panel.Builder.GaugePanel.FieldConfig.Defaults.Unit)
 }
 
 func TestDecimalsCanBeConfigured(t *testing.T) {
@@ -147,7 +147,7 @@ func TestDecimalsCanBeConfigured(t *testing.T) {
 	panel, err := New("", Decimals(3))
 
 	req.NoError(err)
-	req.Equal(3, *panel.Builder.StatPanel.FieldConfig.Defaults.Decimals)
+	req.Equal(3, *panel.Builder.GaugePanel.FieldConfig.Defaults.Decimals)
 }
 
 func TestInvalidDecimalsAreRejected(t *testing.T) {
@@ -157,107 +157,6 @@ func TestInvalidDecimalsAreRejected(t *testing.T) {
 
 	req.Error(err)
 	req.ErrorIs(err, errors.ErrInvalidArgument)
-}
-
-func TestSparkLineCanBeDisplayed(t *testing.T) {
-	req := require.New(t)
-
-	panel, err := New("", SparkLine())
-
-	req.NoError(err)
-	req.Equal("area", panel.Builder.StatPanel.Options.GraphMode)
-}
-
-func TestSparkLineYMinCanBeSet(t *testing.T) {
-	req := require.New(t)
-
-	panel, err := New("", SparkLineYMin(1.1))
-
-	req.NoError(err)
-	req.Equal(1.1, *panel.Builder.StatPanel.FieldConfig.Defaults.Min)
-}
-
-func TestSparkLineYMaxCanBeSet(t *testing.T) {
-	req := require.New(t)
-
-	panel, err := New("", SparkLineYMax(2.2))
-
-	req.NoError(err)
-	req.Equal(2.2, *panel.Builder.StatPanel.FieldConfig.Defaults.Max)
-}
-
-func TestTextModeCanBeSet(t *testing.T) {
-	testCases := []struct {
-		input    TextMode
-		expected string
-	}{
-		{
-			input:    TextAuto,
-			expected: "auto",
-		},
-		{
-			input:    TextValue,
-			expected: "value",
-		},
-		{
-			input:    TextName,
-			expected: "name",
-		},
-		{
-			input:    TextValueAndName,
-			expected: "value_and_name",
-		},
-		{
-			input:    TextNone,
-			expected: "none",
-		},
-	}
-
-	for _, testCase := range testCases {
-		tc := testCase
-
-		t.Run(tc.expected, func(t *testing.T) {
-			req := require.New(t)
-
-			panel, err := New("", Text(tc.input))
-
-			req.NoError(err)
-			req.Equal(tc.expected, panel.Builder.StatPanel.Options.TextMode)
-		})
-	}
-}
-
-func TestOrientationCanBeSet(t *testing.T) {
-	testCases := []struct {
-		input    OrientationMode
-		expected string
-	}{
-		{
-			input:    OrientationAuto,
-			expected: "",
-		},
-		{
-			input:    OrientationHorizontal,
-			expected: "horizontal",
-		},
-		{
-			input:    OrientationVertical,
-			expected: "vertical",
-		},
-	}
-
-	for _, testCase := range testCases {
-		tc := testCase
-
-		t.Run(tc.expected, func(t *testing.T) {
-			req := require.New(t)
-
-			panel, err := New("", Orientation(tc.input))
-
-			req.NoError(err)
-			req.Equal(tc.expected, panel.Builder.StatPanel.Options.Orientation)
-		})
-	}
 }
 
 func TestValueTypeCanBeSet(t *testing.T) {
@@ -316,8 +215,8 @@ func TestValueTypeCanBeSet(t *testing.T) {
 			panel, err := New("", ValueType(tc.input))
 
 			req.NoError(err)
-			req.Len(panel.Builder.StatPanel.Options.ReduceOptions.Calcs, 1)
-			req.Equal(tc.expected, panel.Builder.StatPanel.Options.ReduceOptions.Calcs[0])
+			req.Len(panel.Builder.GaugePanel.Options.ReduceOptions.Calcs, 1)
+			req.Equal(tc.expected, panel.Builder.GaugePanel.Options.ReduceOptions.Calcs[0])
 		})
 	}
 }
@@ -337,7 +236,7 @@ func TestValueFontSizeCanBeSet(t *testing.T) {
 	panel, err := New("", ValueFontSize(120))
 
 	req.NoError(err)
-	req.Equal(120, panel.Builder.StatPanel.Options.Text.ValueSize)
+	req.Equal(120, panel.Builder.GaugePanel.Options.Text.ValueSize)
 }
 
 func TestTitleFontSizeCanBeSet(t *testing.T) {
@@ -346,34 +245,7 @@ func TestTitleFontSizeCanBeSet(t *testing.T) {
 	panel, err := New("", TitleFontSize(120))
 
 	req.NoError(err)
-	req.Equal(120, panel.Builder.StatPanel.Options.Text.TitleSize)
-}
-
-func TestColorsCanBeDisabled(t *testing.T) {
-	req := require.New(t)
-
-	panel, err := New("", ColorNone())
-
-	req.NoError(err)
-	req.Equal("none", panel.Builder.StatPanel.Options.ColorMode)
-}
-
-func TestValueCanBeColored(t *testing.T) {
-	req := require.New(t)
-
-	panel, err := New("", ColorValue())
-
-	req.NoError(err)
-	req.Equal("value", panel.Builder.StatPanel.Options.ColorMode)
-}
-
-func TestBackgroundCanBeColored(t *testing.T) {
-	req := require.New(t)
-
-	panel, err := New("", ColorBackground())
-
-	req.NoError(err)
-	req.Equal("background", panel.Builder.StatPanel.Options.ColorMode)
+	req.Equal(120, panel.Builder.GaugePanel.Options.Text.TitleSize)
 }
 
 func TestAbsoluteThresholdsCanBeConfigured(t *testing.T) {
@@ -396,7 +268,7 @@ func TestAbsoluteThresholdsCanBeConfigured(t *testing.T) {
 
 	req.NoError(err)
 
-	thresholds := panel.Builder.StatPanel.FieldConfig.Defaults.Thresholds
+	thresholds := panel.Builder.GaugePanel.FieldConfig.Defaults.Thresholds
 	req.Equal("absolute", thresholds.Mode)
 	req.Len(thresholds.Steps, 3)
 }
@@ -421,9 +293,42 @@ func TestRelativeThresholdsCanBeConfigured(t *testing.T) {
 
 	req.NoError(err)
 
-	thresholds := panel.Builder.StatPanel.FieldConfig.Defaults.Thresholds
+	thresholds := panel.Builder.GaugePanel.FieldConfig.Defaults.Thresholds
 	req.Equal("percentage", thresholds.Mode)
 	req.Len(thresholds.Steps, 3)
+}
+
+func TestOrientationCanBeSet(t *testing.T) {
+	testCases := []struct {
+		input    OrientationMode
+		expected string
+	}{
+		{
+			input:    OrientationAuto,
+			expected: "",
+		},
+		{
+			input:    OrientationHorizontal,
+			expected: "horizontal",
+		},
+		{
+			input:    OrientationVertical,
+			expected: "vertical",
+		},
+	}
+
+	for _, testCase := range testCases {
+		tc := testCase
+
+		t.Run(tc.expected, func(t *testing.T) {
+			req := require.New(t)
+
+			panel, err := New("", Orientation(tc.input))
+
+			req.NoError(err)
+			req.Equal(tc.expected, panel.Builder.GaugePanel.Options.Orientation)
+		})
+	}
 }
 
 func float64Ptr(input float64) *float64 {
